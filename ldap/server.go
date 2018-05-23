@@ -223,8 +223,11 @@ func (cli *srvClient) processRequest(msgID int, pkt *Packet) error {
 	default:
 		pkt.Format(os.Stdout)
 		return ErrUnsupportedRequestTag(pkt.Tag)
-	case ApplicationUnbindRequest:
+	case ApplicationAbandonRequest:
 		return io.EOF
+	case ApplicationUnbindRequest:
+		cli.srv.Backend.Disconnect(cli.ctx)
+		return nil
 	case ApplicationBindRequest:
 		// TODO: SASL
 		req, err := parseBindRequest(pkt)

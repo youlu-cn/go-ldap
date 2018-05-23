@@ -55,13 +55,6 @@ func (d DerefAliases) String() string {
 	return strconv.Itoa(int(d))
 }
 
-type ExtensibleMatch struct {
-	MatchingRule string // optional
-	Attribute    string
-	Value        string
-	DNAttributes bool
-}
-
 type SearchRequest struct {
 	BaseDN       string
 	Scope        Scope

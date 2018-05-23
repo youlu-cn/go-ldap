@@ -159,6 +159,24 @@ func (f *ApproxMatch) String() string {
 	return fmt.Sprintf("(%s~=%s)", filterEscape(f.Attribute), filterEscape(string(f.Value)))
 }
 
+type ExtensibleMatch struct {
+	MatchingRule string // optional
+	Attribute    string
+	Value        string
+	DNAttributes bool
+}
+
+func (f *ExtensibleMatch) Encode() (*Packet, error) {
+	pkt := NewPacket(ClassContext, false, filterTagExtensibleMatch, nil)
+	pkt.AddItem(NewPacket(ClassUniversal, true, TagOctetString, f.Attribute))
+	pkt.AddItem(NewPacket(ClassUniversal, true, TagOctetString, f.Value))
+	return pkt, nil
+}
+
+func (f *ExtensibleMatch) String() string {
+	return fmt.Sprintf("(!%s:%s:=%s)", filterEscape(f.Attribute), filterEscape(f.MatchingRule), filterEscape(string(f.Value)))
+}
+
 type Present struct {
 	Attribute string
 }
@@ -509,7 +527,25 @@ func parseSearchFilter(pkt *Packet) (Filter, error) {
 		}
 		return f, nil
 	case filterTagExtensibleMatch:
-		// TODO
+		var ok bool
+		f := &ExtensibleMatch{}
+		for i, c := range pkt.Items {
+			switch i {
+			case 0:
+				if f.MatchingRule, ok = c.Str(); !ok {
+					return nil, ErrProtocolError("failed to parse extensibleMatch.matchingRule in filter")
+				}
+			case 1:
+				if f.Attribute, ok = c.Str(); !ok {
+					return nil, ErrProtocolError("failed to parse extensibleMatch.attribute in filter")
+				}
+			case 2:
+				if f.Value, ok = c.Str(); !ok {
+					return nil, ErrProtocolError("failed to parse extensibleMatch.value in filter")
+				}
+			}
+		}
+		return f, nil
 	}
 	return nil, ErrProtocolError(fmt.Sprintf("unknown filter tag %d", pkt.Tag))
 }
