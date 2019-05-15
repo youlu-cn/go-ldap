@@ -166,7 +166,7 @@ func (cli *srvClient) serve() {
 		pkt, _, err := ReadPacket(cli.cn)
 		if err != nil {
 			if err != io.EOF {
-				log.Printf("ReadPacket failed: %s", err.Error())
+				// log.Printf("ReadPacket failed: %s", err.Error())
 			}
 			return
 		}
